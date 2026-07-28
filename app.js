@@ -20,7 +20,7 @@ if (savedDb) {
     db = JSON.parse(savedDb);
 }
 
-const saveDb = () => localStorage.setItem('sakura_db', JSON.stringify(db));
+const saveMockDb = () => localStorage.setItem('sakura_db', JSON.stringify(db));
 
 window.fetch = async (url, options = {}) => {
     // Only intercept /api/ calls
@@ -72,18 +72,18 @@ window.fetch = async (url, options = {}) => {
             if (method === 'POST') {
                 const item = { ...body, id: Date.now() };
                 db.inventory.push(item);
-                saveDb();
+                saveMockDb();
                 return createResponse({ success: true, id: item.id });
             }
             if (method === 'PUT') {
                 const index = db.inventory.findIndex(i => i.id == body.id);
                 if (index !== -1) db.inventory[index] = { ...db.inventory[index], ...body };
-                saveDb();
+                saveMockDb();
                 return createResponse({ success: true });
             }
             if (method === 'DELETE') {
                 db.inventory = db.inventory.filter(i => i.id != body.id);
-                saveDb();
+                saveMockDb();
                 return createResponse({ success: true });
             }
         }
@@ -92,13 +92,13 @@ window.fetch = async (url, options = {}) => {
             if (method === 'POST') {
                 const item = { ...body, id: Date.now() };
                 db.orders.push(item);
-                saveDb();
+                saveMockDb();
                 return createResponse({ success: true, id: item.id });
             }
             if (method === 'PUT') {
                 const index = db.orders.findIndex(i => i.id == body.id);
                 if (index !== -1) db.orders[index] = { ...db.orders[index], ...body };
-                saveDb();
+                saveMockDb();
                 return createResponse({ success: true });
             }
         }
@@ -107,7 +107,7 @@ window.fetch = async (url, options = {}) => {
             if (method === 'POST') {
                 const item = { ...body, id: Date.now() };
                 db.customers.push(item);
-                saveDb();
+                saveMockDb();
                 return createResponse({ success: true, id: item.id });
             }
         }
