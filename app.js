@@ -43,17 +43,17 @@ window.fetch = async (url, options = {}) => {
             if (method === 'POST') {
                 if (body.username === 'admin' && body.password === 'admin123') {
                     localStorage.setItem('sakura_user', 'admin');
-                    return createResponse({ success: true, message: 'Logged in' });
+                    return createResponse({ success: true, message: 'Logged in', user: { name: 'System Admin', role: 'Admin' } });
                 }
                 return createResponse({ error: 'Invalid credentials' }, 401);
             }
         }
 
-        if (url.includes('auth.php?action=check')) {
+        if (url.includes('auth.php?action=me')) {
             if (localStorage.getItem('sakura_user')) {
-                return createResponse({ authenticated: true, user: { username: 'admin', role: 'Admin' }});
+                return createResponse({ loggedIn: true, user: { name: 'System Admin', role: 'Admin' }});
             }
-            return createResponse({ authenticated: false });
+            return createResponse({ loggedIn: false });
         }
 
         // Data Bulk Fetch
