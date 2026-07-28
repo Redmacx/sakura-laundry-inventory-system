@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sakura Laundry - 3D Cyber Inventory</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+    
+    <!-- LOGIN SCREEN OVERLAY -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-card glass">
+            <div class="login-header">
+                <h2>さくら 3D</h2>
+                <p>Authentication Matrix</p>
+            </div>
+            <form id="login-form">
+                <div class="control-group">
+                    <label>Username</label>
+                    <input type="text" id="login-username" class="form-input" required>
+                </div>
+                <div class="control-group">
+                    <label>Passcode</label>
+                    <input type="password" id="login-password" class="form-input" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">Access System</button>
+                <div id="login-error" style="color: var(--color-pink); font-size: 13px; margin-top: 10px; text-align: center; display: none;"></div>
+            </form>
+        </div>
+    </div>
+
+    <div class="app-container" id="app-container" style="display: none;">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-bolt-lightning logo-icon"></i>
+                </div>
+                <div class="brand-name">
+                    <h1>さくら 3D</h1>
+                    <span>Sakura Systems</span>
+                </div>
+            </div>
+            
+            <nav class="nav-menu">
+                <a href="#dashboard" class="nav-item active" data-tab="dashboard">
+                    <i class="fa-solid fa-chart-simple"></i>
+                    <span>Control Hub</span>
+                </a>
+                <a href="#inventory" class="nav-item" data-tab="inventory">
+                    <i class="fa-solid fa-server"></i>
+                    <span>Supply Matrix</span>
+                </a>
+                <a href="#tracking" class="nav-item" data-tab="tracking">
+                    <i class="fa-solid fa-compass-drafting"></i>
+                    <span>Order Tracking</span>
+                </a>
+                <a href="#customers" class="nav-item" data-tab="customers">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Client Database</span>
+                </a>
+                <a href="#users" class="nav-item" data-tab="users">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span>Operator Keys</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="current-user-badge">
+                    <img id="user-avatar" src="https://api.dicebear.com/7.x/adventurer/svg?seed=sakura-staff" alt="Staff Avatar" class="avatar">
+                    <div class="user-info">
+                        <h4 id="user-display-name">Aiko Tanaka</h4>
+                        <span id="user-role">Administrator</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Header Bar -->
+            <header class="main-header">
+                <div class="header-left">
+                    <h2 id="page-title">Dashboard Overview</h2>
+                    <p id="page-subtitle" class="text-muted">Welcome back, Aiko. Here is today's laundry status.</p>
+                </div>
+                <div class="header-right">
+                    <!-- Global Search Bar -->
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="global-search" placeholder="Search system...">
+                    </div>
+                    <!-- Notification Bell Button -->
+                    <div class="notification-bell" id="notification-bell-btn">
+                        <i class="fa-solid fa-bell"></i>
+                        <span class="bell-badge" id="bell-badge-count">3</span>
+                        <!-- Dropdown Menu -->
+                        <div class="notification-dropdown" id="notification-dropdown">
+                            <div class="dropdown-header">
+                                <h3>Alert Matrix</h3>
+                                <button id="mark-all-read-btn" class="btn-text">Clear Matrix</button>
+                            </div>
+                            <div class="dropdown-list" id="notification-list">
+                                <!-- Dynamic notifications go here -->
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Quick Actions -->
+                    <button class="btn btn-primary" id="btn-quick-order">
+                        <i class="fa-solid fa-plus"></i> New Order
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dynamic Content Sections -->
+            <div class="content-body">
+                
+                <!-- 1. DASHBOARD VIEW -->
+                <section id="tab-dashboard" class="tab-pane active">
+                    <!-- KPI Cards Grid -->
+                    <div class="kpi-grid">
+                        <div class="kpi-card glass">
+                            <div class="kpi-icon color-blue">
+                                <i class="fa-solid fa-microchip"></i>
+                            </div>
+                            <div class="kpi-data">
+                                <h3>Total Materials</h3>
+                                <p class="kpi-value" id="kpi-total-items">0</p>
+                                <span class="kpi-trend positive"><i class="fa-solid fa-arrow-trend-up"></i> Live Tracking</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card glass">
+                            <div class="kpi-icon color-pink">
+                                <i class="fa-solid fa-arrows-spin fa-spin"></i>
+                            </div>
+                            <div class="kpi-data">
+                                <h3>Processing</h3>
+                                <p class="kpi-value" id="kpi-active-orders">0</p>
+                                <span class="kpi-trend" id="kpi-washing-label">0 in washer bays</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card glass">
+                            <div class="kpi-icon color-green">
+                                <i class="fa-solid fa-clipboard-check"></i>
+                            </div>
+                            <div class="kpi-data">
+                                <h3>Ready / Handover</h3>
+                                <p class="kpi-value" id="kpi-completed-orders">0</p>
+                                <span class="kpi-trend positive"><i class="fa-solid fa-check-double"></i> Verified Cleans</span>
+                            </div>
+                        </div>
+                        <div class="kpi-card glass">
+                            <div class="kpi-icon color-orange">
+                                <i class="fa-solid fa-triangle-exclamation"></i>
+                            </div>
+                            <div class="kpi-data">
+                                <h3>Threshold Warnings</h3>
+                                <p class="kpi-value" id="kpi-alerts">0</p>
+                                <span class="kpi-trend negative" id="kpi-alert-subtext">Low stock warnings</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Double Chart Section -->
+                    <div class="dashboard-charts-grid">
+                        <div class="chart-card glass">
+                            <h3>Supply Matrix Levels</h3>
+                            <div class="chart-container">
+                                <canvas id="stock-chart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-card glass">
+                            <h3>Order Tracking stages</h3>
+                            <div class="chart-container">
+                                <canvas id="order-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Activity and Critical Alerts -->
+                    <div class="dashboard-details-grid">
+                        <div class="detail-card glass">
+                            <div class="card-header-btn">
+                                <h3>System Activity Logs</h3>
+                                <button class="btn btn-sm btn-outline" id="clear-activity-log">Clear</button>
+                            </div>
+                            <div class="activity-timeline" id="dashboard-activity-log">
+                                <!-- Dynamic logs here -->
+                            </div>
+                        </div>
+                        <div class="detail-card glass">
+                            <h3>Critical Supply Deficits</h3>
+                            <div class="critical-stock-list" id="dashboard-critical-stock">
+                                <!-- Dynamic low stock alerts here -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 3. INVENTORY LIST VIEW -->
+                <section id="tab-inventory" class="tab-pane">
+                    <div class="table-container-card glass">
+                        <div class="table-actions">
+                            <div class="filter-controls">
+                                <div class="search-box">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                    <input type="text" id="inventory-search" placeholder="Filter supplies...">
+                                </div>
+                                <select id="inventory-category-filter" class="form-input">
+                                    <option value="all">All Categories</option>
+                                    <option value="Detergents">Detergents & Soaps</option>
+                                    <option value="Softeners">Softeners & Conditioners</option>
+                                    <option value="Hangers">Packaging & Hangers</option>
+                                    <option value="Bleach">Bleach & Additives</option>
+                                    <option value="Bags">Laundry Bags</option>
+                                </select>
+                                <select id="inventory-stock-filter" class="form-input">
+                                    <option value="all">All Stock Status</option>
+                                    <option value="low">Low Stock Alerts</option>
+                                    <option value="in-stock">Healthy Stock</option>
+                                    <option value="out">Out of Stock</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" id="btn-add-item">
+                                <i class="fa-solid fa-plus"></i> Add Supply Item
+                            </button>
+                        </div>
+
+                        <div class="responsive-table-wrapper">
+                            <table class="inventory-table">
+                                <thead>
+                                    <tr>
+                                        <th>Material Name</th>
+                                        <th>Category</th>
+                                        <th>Stock Level</th>
+                                        <th>Total Capacity</th>
+                                        <th>Minimum Alert</th>
+                                        <th>Status</th>
+                                        <th class="text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="inventory-tbody">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 4. LAUNDRY ORDER TRACKING VIEW -->
+                <section id="tab-tracking" class="tab-pane">
+                    <div class="tracking-top-bar glass mb-4">
+                        <div class="tracking-filters">
+                            <div class="search-box">
+                                <i class="fa-solid fa-magnifying-glass"></i>
+                                <input type="text" id="tracking-search" placeholder="Search order matrix...">
+                            </div>
+                            <select id="tracking-service-filter" class="form-input">
+                                <option value="all">All Services</option>
+                                <option value="Wash & Fold">Wash & Fold</option>
+                                <option value="Dry Cleaning">Dry Cleaning</option>
+                                <option value="Ironing">Ironing Only</option>
+                                <option value="Premium Care">Premium Care</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary" id="btn-new-order-tracking">
+                            <i class="fa-solid fa-plus"></i> Add Laundry Order
+                        </button>
+                    </div>
+
+                    <!-- Kanban Board for Order Tracking -->
+                    <div class="kanban-board">
+                        
+                        <!-- Column 1: Received -->
+                        <div class="kanban-column" id="col-received">
+                            <div class="column-header border-received">
+                                <h3>Received</h3>
+                                <span class="count-badge" id="count-received">0</span>
+                            </div>
+                            <div class="kanban-cards-container" id="cards-received" data-status="Received">
+                                <!-- Cards injected here -->
+                            </div>
+                        </div>
+
+                        <!-- Column 2: Washing -->
+                        <div class="kanban-column" id="col-washing">
+                            <div class="column-header border-washing">
+                                <h3>Washing <i class="fa-solid fa-spinner fa-spin-pulse header-spin-icon"></i></h3>
+                                <span class="count-badge" id="count-washing">0</span>
+                            </div>
+                            <div class="kanban-cards-container" id="cards-washing" data-status="Washing">
+                                <!-- Cards injected here -->
+                            </div>
+                        </div>
+
+                        <!-- Column 3: Drying -->
+                        <div class="kanban-column" id="col-drying">
+                            <div class="column-header border-drying">
+                                <h3>Drying</h3>
+                                <span class="count-badge" id="count-drying">0</span>
+                            </div>
+                            <div class="kanban-cards-container" id="cards-drying" data-status="Drying">
+                                <!-- Cards injected here -->
+                            </div>
+                        </div>
+
+                        <!-- Column 4: Ready for Pickup -->
+                        <div class="kanban-column" id="col-ready">
+                            <div class="column-header border-ready">
+                                <h3>Ready</h3>
+                                <span class="count-badge" id="count-ready">0</span>
+                            </div>
+                            <div class="kanban-cards-container" id="cards-ready" data-status="Ready">
+                                <!-- Cards injected here -->
+                            </div>
+                        </div>
+
+                        <!-- Column 5: Delivered -->
+                        <div class="kanban-column" id="col-delivered">
+                            <div class="column-header border-delivered">
+                                <h3>Picked Up / Delivered</h3>
+                                <span class="count-badge" id="count-delivered">0</span>
+                            </div>
+                            <div class="kanban-cards-container" id="cards-delivered" data-status="Delivered">
+                                <!-- Cards injected here -->
+                            </div>
+                        </div>
+
+                    </div>
+                </section>
+
+                <!-- 5. CUSTOMER DATABASE VIEW -->
+                <section id="tab-customers" class="tab-pane">
+                    <div class="table-container-card glass">
+                        <div class="table-actions">
+                            <div class="filter-controls">
+                                <div class="search-box">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                    <input type="text" id="customers-search" placeholder="Search clients...">
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" id="btn-add-customer">
+                                <i class="fa-solid fa-user-plus"></i> Add New Client
+                            </button>
+                        </div>
+                        <div class="responsive-table-wrapper">
+                            <table class="inventory-table data-table">
+                                <thead>
+                                    <tr>
+                                        <th>Name</th>
+                                        <th>Phone Number</th>
+                                        <th>Email Address</th>
+                                        <th>Physical Address</th>
+                                        <th class="text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="customers-tbody">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 6. USER MANAGEMENT VIEW -->
+                <section id="tab-users" class="tab-pane">
+                    <div class="table-container-card glass">
+                        <div class="table-actions">
+                            <h3>Operator Access Credentials</h3>
+                            <button class="btn btn-primary" id="btn-add-user">
+                                <i class="fa-solid fa-user-plus"></i> Add Staff Account
+                            </button>
+                        </div>
+
+                        <div class="responsive-table-wrapper">
+                            <table class="users-table">
+                                <thead>
+                                    <tr>
+                                        <th>Staff Operator</th>
+                                        <th>ID/Username</th>
+                                        <th>Authority level</th>
+                                        <th>Email</th>
+                                        <th>Access Status</th>
+                                        <th class="text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="users-tbody">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- ================= MODALS SECTION ================= -->
+    <div class="modal-backdrop" id="modal-backdrop">
+        
+        <!-- CUSTOMER MODAL -->
+        <div class="modal-dialog glass" id="modal-customer" style="display: none;">
+            <div class="modal-header">
+                <h3 id="customer-modal-title">New Client Profile</h3>
+                <button class="modal-close-btn" onclick="closeAllModals()">&times;</button>
+            </div>
+            <form id="customer-form">
+                <input type="hidden" id="customer-id-field">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label>Client Name</label>
+                            <input type="text" id="cust-name" class="form-input" required placeholder="Full Name">
+                        </div>
+                        <div class="form-group col-6">
+                            <label>Phone Number</label>
+                            <input type="text" id="cust-phone" class="form-input" required placeholder="Phone Number">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label>Email Address</label>
+                            <input type="email" id="cust-email" class="form-input" placeholder="Email Address">
+                        </div>
+                        <div class="form-group col-6">
+                            <label>Physical Address</label>
+                            <input type="text" id="cust-address" class="form-input" placeholder="Delivery Address">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeAllModals()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Profile</button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- 1. ADD / EDIT INVENTORY ITEM MODAL -->
+        <div class="modal-dialog glass" id="modal-inventory">
+            <div class="modal-header">
+                <h3 id="inventory-modal-title">Add Supply Item</h3>
+                <button class="modal-close-btn" onclick="closeAllModals()">&times;</button>
+            </div>
+            <form id="inventory-form">
+                <input type="hidden" id="inventory-id-field">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group col-12">
+                            <label for="inv-name">Item Name</label>
+                            <input type="text" id="inv-name" class="form-input" required placeholder="e.g. Lavender Powder Detergent">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="inv-category">Category</label>
+                            <select id="inv-category" class="form-input" required>
+                                <option value="Detergents">Detergents & Soaps</option>
+                                <option value="Softeners">Softeners & Conditioners</option>
+                                <option value="Hangers">Packaging & Hangers</option>
+                                <option value="Bleach">Bleach & Additives</option>
+                                <option value="Bags">Laundry Bags</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="inv-unit">Measurement Unit</label>
+                            <input type="text" id="inv-unit" class="form-input" required placeholder="e.g. Liters, kg, Pcs">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-4">
+                            <label for="inv-quantity">Current Quantity</label>
+                            <input type="number" id="inv-quantity" class="form-input" min="0" required placeholder="10">
+                        </div>
+                        <div class="form-group col-4">
+                            <label for="inv-capacity">Capacity / Max</label>
+                            <input type="number" id="inv-capacity" class="form-input" min="1" required placeholder="100">
+                        </div>
+                        <div class="form-group col-4">
+                            <label for="inv-min-alert">Min Stock Level</label>
+                            <input type="number" id="inv-min-alert" class="form-input" min="0" required placeholder="5">
+                        </div>
+                    </div>
+                    <!-- 3D visual preview properties in form -->
+                    <div class="form-row mt-2">
+                        <div class="form-group col-12">
+                            <div class="3d-setup-indicator">
+                                <i class="fa-solid fa-cube text-pink"></i>
+                                <span>Note: Item will be rendered in 3D shelves under its respective category shelf.</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeAllModals()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Item</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 2. ADD / EDIT LAUNDRY ORDER MODAL -->
+        <div class="modal-dialog glass" id="modal-order">
+            <div class="modal-header">
+                <h3 id="order-modal-title">New Laundry Order</h3>
+                <button class="modal-close-btn" onclick="closeAllModals()">&times;</button>
+            </div>
+            <form id="order-form">
+                <input type="hidden" id="order-id-field">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="ord-customer">Customer Name</label>
+                            <input type="text" id="ord-customer" class="form-input" required placeholder="e.g. Kenji Sato">
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="ord-phone">Phone Number</label>
+                            <input type="tel" id="ord-phone" class="form-input" required placeholder="080-xxxx-xxxx">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="ord-service">Service Type</label>
+                            <select id="ord-service" class="form-input" required>
+                                <option value="Wash & Fold">Wash & Fold</option>
+                                <option value="Dry Cleaning">Dry Cleaning</option>
+                                <option value="Ironing">Ironing Only</option>
+                                <option value="Premium Care">Premium & Delicates Care</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="ord-weight">Weight (kg) or Qty</label>
+                            <input type="text" id="ord-weight" class="form-input" required placeholder="e.g. 5.5 kg or 4 coats">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="ord-status">Tracking Status</label>
+                            <select id="ord-status" class="form-input" required>
+                                <option value="Received">Received</option>
+                                <option value="Washing">Washing</option>
+                                <option value="Drying">Drying</option>
+                                <option value="Ready">Ready for Pickup</option>
+                                <option value="Delivered">Delivered</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="ord-price">Price (¥)</label>
+                            <input type="number" id="ord-price" class="form-input" required placeholder="1500">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-12">
+                            <label for="ord-notes">Special Instructions (Optional)</label>
+                            <textarea id="ord-notes" class="form-input" rows="2" placeholder="e.g. Hang dry only, remove wine stain on white shirt..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeAllModals()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Order</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 3. ADD / EDIT USER MODAL -->
+        <div class="modal-dialog glass" id="modal-user">
+            <div class="modal-header">
+                <h3 id="user-modal-title">Add Staff Member</h3>
+                <button class="modal-close-btn" onclick="closeAllModals()">&times;</button>
+            </div>
+            <form id="user-form">
+                <input type="hidden" id="user-id-field">
+                <div class="modal-body">
+                    <div class="form-row">
+                        <div class="form-group col-12">
+                            <label for="usr-fullname">Full Name</label>
+                            <input type="text" id="usr-fullname" class="form-input" required placeholder="e.g. Kenzo Yamada">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="usr-username">Username</label>
+                            <input type="text" id="usr-username" class="form-input" required placeholder="yamada.staff">
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="usr-email">Email Address</label>
+                            <input type="email" id="usr-email" class="form-input" required placeholder="yamada@sakuralaundry.jp">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="usr-role">Role</label>
+                            <select id="usr-role" class="form-input" required>
+                                <option value="Administrator">Administrator</option>
+                                <option value="Supervisor">Supervisor</option>
+                                <option value="Staff">Staff / Laundry Operator</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="usr-status">Account Status</label>
+                            <select id="usr-status" class="form-input" required>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive / Suspended</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group col-12">
+                            <label for="usr-avatar-seed">Avatar Style (Seed name for random generation)</label>
+                            <input type="text" id="usr-avatar-seed" class="form-input" placeholder="e.g. Kenzo, Hanako (uses Dicebear)">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" onclick="closeAllModals()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Account</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- App Script -->
+    <script src="app.js"></script>
+</body>
+</html>
