@@ -175,17 +175,10 @@ async function loadDataFromAPI() {
 
 // Compat shim for old local storage save structure.
 // This now posts to the SQLite backend.
-async function saveDb(key, value) {
+function saveDb(key, value) {
     const entity = key.replace("sakura_", ""); // 'inventory', 'orders', etc
-    try {
-        await fetch(`${API_URL}/${entity}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(value)
-        });
-    } catch (err) {
-        console.error(`Error saving ${entity} to server:`, err);
-    }
+    db[entity] = value;
+    saveMockDb();
 }
 
 // --- GLOBAL APP STATE ---
