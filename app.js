@@ -436,6 +436,7 @@ function checkStockLevels() {
 
 // --- MODAL UTILS ---
 function openModal(modal) {
+    closeAllModals();
     DOM.modalBackdrop.classList.add("active");
     modal.classList.add("active");
 }
