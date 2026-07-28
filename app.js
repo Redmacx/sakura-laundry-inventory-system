@@ -1268,7 +1268,7 @@ if (loginForm) {
                         if (document.getElementById('nav-users')) document.getElementById('nav-users').style.display = 'flex';
                     }
                 }
-                await initApp();
+                await loadDataFromAPI();
             } else {
                 loginError.textContent = data.error || 'Invalid credentials';
                 loginError.style.display = 'block';
@@ -1297,7 +1297,7 @@ async function checkSession() {
                         if (document.getElementById('nav-users')) document.getElementById('nav-users').style.display = 'flex';
                     }
                 }
-            await initApp();
+            await loadDataFromAPI();
         } else {
             loginOverlay.style.display = 'flex';
             appContainer.style.display = 'none';
