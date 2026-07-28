@@ -42,11 +42,17 @@ window.fetch = async (url, options = {}) => {
         };
 
         // Auth
-        if (url.includes('auth.php')) {
+        if (url.includes('auth.php') && !url.includes('?action')) {
             if (method === 'POST') {
                 if (body.username === 'admin' && body.password === 'admin123') {
                     localStorage.setItem('sakura_user', 'admin');
-                    return createResponse({ success: true, message: 'Logged in', user: { name: 'System Admin', role: 'Admin' } });
+                    localStorage.setItem('sakura_user_role', 'Administrator');
+                    return createResponse({ success: true, message: 'Logged in', user: { name: 'System Admin', role: 'Administrator' } });
+                }
+                if (body.username === 'staff' && body.password === 'staff123') {
+                    localStorage.setItem('sakura_user', 'staff');
+                    localStorage.setItem('sakura_user_role', 'Staff');
+                    return createResponse({ success: true, message: 'Logged in', user: { name: 'Store Staff', role: 'Staff' } });
                 }
                 return createResponse({ error: 'Invalid credentials' }, 401);
             }
@@ -54,9 +60,15 @@ window.fetch = async (url, options = {}) => {
 
         if (url.includes('auth.php?action=me')) {
             if (localStorage.getItem('sakura_user')) {
-                return createResponse({ loggedIn: true, user: { name: 'System Admin', role: 'Admin' }});
+                return createResponse({ loggedIn: true, user: { name: 'System Admin', role: localStorage.getItem('sakura_user_role') || 'Administrator' }});
             }
             return createResponse({ loggedIn: false });
+        }
+
+        if (url.includes('auth.php?action=logout')) {
+            localStorage.removeItem('sakura_user');
+            localStorage.removeItem('sakura_user_role');
+            return createResponse({ message: 'Logged out successfully' });
         }
 
         if (url.includes('data.php') && method === 'GET') {
@@ -1250,6 +1262,11 @@ if (loginForm) {
                 if (document.getElementById('user-display-name')) {
                     document.getElementById('user-display-name').textContent = data.user.name;
                     document.getElementById('user-role').textContent = data.user.role;
+                    if (data.user.role !== 'Administrator' && data.user.role !== 'Admin') {
+                        if (document.getElementById('nav-users')) document.getElementById('nav-users').style.display = 'none';
+                    } else {
+                        if (document.getElementById('nav-users')) document.getElementById('nav-users').style.display = 'flex';
+                    }
                 }
                 await initApp();
             } else {
@@ -1271,10 +1288,15 @@ async function checkSession() {
         if (data.loggedIn) {
             loginOverlay.style.display = 'none';
             appContainer.style.display = 'flex';
-            if (document.getElementById('user-display-name')) {
-                document.getElementById('user-display-name').textContent = data.user.name;
-                document.getElementById('user-role').textContent = data.user.role;
-            }
+                if (document.getElementById('user-display-name')) {
+                    document.getElementById('user-display-name').textContent = data.user.name;
+                    document.getElementById('user-role').textContent = data.user.role;
+                    if (data.user.role !== 'Administrator' && data.user.role !== 'Admin') {
+                        if (document.getElementById('nav-users')) document.getElementById('nav-users').style.display = 'none';
+                    } else {
+                        if (document.getElementById('nav-users')) document.getElementById('nav-users').style.display = 'flex';
+                    }
+                }
             await initApp();
         } else {
             loginOverlay.style.display = 'flex';
@@ -1386,3 +1408,16 @@ document.querySelectorAll('.nav-item').forEach(nav => {
         }
     });
 });
+
+// --- LOGOUT LOGIC ---
+const logoutBtn = document.getElementById('logout-btn');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', async () => {
+        try {
+            await fetch('api/auth.php?action=logout');
+            window.location.reload();
+        } catch (err) {
+            console.error('Logout failed', err);
+        }
+    });
+}
