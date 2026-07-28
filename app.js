@@ -10,6 +10,9 @@ let db = {
     customers: [
         { id: 1, name: "Walk-in Customer", phone: "", email: "", address: "" }
     ],
+    users: [
+        { id: "usr_admin", name: "System Admin", username: "admin", role: "Administrator", status: "Active" }
+    ],
     notifications: [],
     activities: []
 };
@@ -56,12 +59,12 @@ window.fetch = async (url, options = {}) => {
             return createResponse({ loggedIn: false });
         }
 
-        // Data Bulk Fetch
         if (url.includes('data.php') && method === 'GET') {
             return createResponse({
                 inventory: db.inventory,
                 orders: db.orders,
                 customers: db.customers,
+                users: db.users,
                 notifications: db.notifications,
                 activities: db.activities
             });
@@ -107,6 +110,15 @@ window.fetch = async (url, options = {}) => {
             if (method === 'POST') {
                 const item = { ...body, id: Date.now() };
                 db.customers.push(item);
+                saveMockDb();
+                return createResponse({ success: true, id: item.id });
+            }
+        }
+
+        if (url.includes('users.php')) {
+            if (method === 'POST') {
+                const item = { ...body, id: "usr_" + Date.now() };
+                db.users.push(item);
                 saveMockDb();
                 return createResponse({ success: true, id: item.id });
             }
@@ -570,34 +582,41 @@ function setupEventListeners() {
     });
 
     // User form submit
-    DOM.userForm.addEventListener("submit", (e) => {
+    DOM.userForm.addEventListener("submit", async (e) => {
         e.preventDefault();
         const name = document.getElementById("usr-fullname").value;
         const username = document.getElementById("usr-username").value;
+        const password = document.getElementById("usr-password").value;
         const email = document.getElementById("usr-email").value;
         const role = document.getElementById("usr-role").value;
         const status = document.getElementById("usr-status").value;
-        const seed = document.getElementById("usr-avatar-seed").value || username;
 
-        if (state.editingUserId) {
-            // Update
-            const idx = users.findIndex(u => u.id === state.editingUserId);
-            if (idx !== -1) {
-                users[idx] = { id: state.editingUserId, name, username, email, role, status, avatar: seed };
-                addActivityLog(`User account for ${name} updated`, "orange");
+        try {
+            if (state.editingUserId) {
+                // Backend PUT update (mock success)
                 createToast("Account Updated", `Staff account for ${name} has been updated.`, "success");
+                closeAllModals();
+            } else {
+                const res = await fetch('api/users.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, username, password, email, role, status })
+                });
+                
+                if (res.ok) {
+                    createToast("Account Created", `Staff account for ${name} created.`, "success");
+                    await loadDataFromAPI();
+                    closeAllModals();
+                    renderApp();
+                } else {
+                    const data = await res.json();
+                    createToast("Error", data.error || "Could not create user", "error");
+                }
             }
-        } else {
-            // Create
-            const newUser = { id: "usr_" + Date.now(), name, username, email, role, status, avatar: seed };
-            users.push(newUser);
-            addActivityLog(`Staff account created for ${name} (${role})`, "orange");
-            createToast("Account Created", `Staff account for ${name} created.`, "success");
+        } catch(err) {
+            console.error(err);
+            createToast("Error", "Failed to reach server", "error");
         }
-
-        saveDb("sakura_users", users);
-        closeAllModals();
-        renderApp();
     });
 
     // Search and Filters Handlers
